@@ -275,13 +275,9 @@ def run_query(transients_query, dbname, dataset_id, engine, host, port, user, pw
     transients = tkp.db.generic.get_db_rows_as_dicts(cursor)
     return transients
 
-
-engine = 'postgresql'
-host = 'localhost'
-port = 5432
-user = 'mkuiack'
-password = 'Morecomplicatedpass1234'
-
+# import database username/password/etc.
+sys.path.append('/home/kuiack')
+from database_info import *
 query_loglevel = logging.WARNING  # Set to INFO to see queries, otherwise WARNING
 
 tot_timer= time.time()

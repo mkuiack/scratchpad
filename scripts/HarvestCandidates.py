@@ -285,18 +285,17 @@ def plot_lightcurve(full_data, run_id, ion_sub=False, roll_len = 1*60, roll_type
 
 # In[ ]:
 
+# import database username/password/etc.
+sys.path.append('/home/kuiack')
+from database_info import *
+query_loglevel = logging.WARNING  # Set to INFO to see queries, otherwise WARNING
 
-engine = 'postgresql'
-host = 'localhost'
-port = 5432
-user = 'mkuiack'
-password = 'Morecomplicatedpass1234'
+
 # database = 'raw_16SB'
 # database = 'flux_16SB'
 # database = 'fluxcal_db'
 
 # databases = ['higher_201702250130','lower_201702250130']
-query_loglevel = logging.WARNING  # Set to INFO to see queries, otherwise WARNING
 
 
 # In[ ]:
