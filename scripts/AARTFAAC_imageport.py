@@ -126,11 +126,13 @@ class Stream(Protocol):
         t = Time(fitsimg.header['DATE-OBS'])
         frq = fitsimg.header['RESTFRQ']
         bw = fitsimg.header['RESTBW']
+        time = datetime.fromtimestamp(t.unix).strftime('%Y-%m-%dT%H:%M:%S')
 
+	filename = '%s.fits' % (time+"-S"+str(round((frq-self.lofarfrequencyOffset)/ self.lofarBW,1))+"-B"+str(int(np.ceil(bw /self.lofarBW))))
         self.num_processing += 1
-
+	print np.nanstd(fitsimg.data[0,0,:,:])
         # Initial quality condition. 
-        if np.nanstd(fitsimg.data[0,0,:,:]) < self.threshold:
+        if np.nanstd(fitsimg.data[0,0,:,:]) < self.threshold and not os.path.isfile(self.outdir+filename):
             tmpfilename = self.gen_hex_code()+".fits"
             fitsimg.writeto("/tmp/"+tmpfilename)
             self.pqueue.put((t.unix, frq, bw, tmpfilename))
@@ -157,9 +159,10 @@ class Stream(Protocol):
         filename = '%s.fits' % (time+                                 "-S"+str(round((FRQ-self.lofarfrequencyOffset)/ self.lofarBW,1))+                                 "-B"+str(int(np.ceil(BW /self.lofarBW)))) 
         
         if bool(tmpfilename):
-            if os.path.isfile(self.outdir+filename):
-                log.msg("Processed %s [%i], not saved, exists." % (filename, self.num_processing))
-                return 
+#            if os.path.isfile(self.outdir+filename):
+#                log.msg("Processed %s [%i], not saved, exists." % (filename, self.num_processing))
+#		os.remove(tmpfilename)
+#                return 
             
             process = Popen(['python','/afhome/kuiack/scratchpad/scripts/sub_QC-flux.py',
                              '--indir','/tmp/','--fitsfile',tmpfilename,

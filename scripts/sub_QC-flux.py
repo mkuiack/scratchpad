@@ -8,6 +8,8 @@
 
 import os
 import sys
+import csv
+
 from datetime import datetime
 import argparse
 import numpy as np
@@ -35,7 +37,7 @@ def get_configuration():
     parser.add_argument('--fitsfile', type=str, default="./",
                         help="Target fits file.")
 
-    parser.add_argument('--threshold', type=float, default=5.0,
+    parser.add_argument('--threshold', type=float, default=5000.0,
                         help="RMS Threshold to reject image.")
     parser.add_argument('--outdir', type=str, default="./",
                         help="Desitnation directory.")
@@ -118,11 +120,11 @@ def compare_flux(sr, catalog_ras, catalog_decs, catalog_fluxs, catalog_flux_errs
             
     if len(x) > 2:
         w = np.array(w,dtype=float)
-        fit = np.polyfit(x,y,1,w=1./w)
+        fit,cov = np.polyfit(x,y,1,w=1./w,cov=True)
     else:
-        fit = [1e9,1e9]
+        fit = [1e9,1e9,1e9,1e9,0]
 
-    return fit[0], fit[1]
+    return fit[0], cov[0,0], fit[1], cov[1,1], len(x)
 
 
 # In[ ]:
@@ -168,11 +170,16 @@ def process(cfg):
                                force_beam=True)
 
         # Reference catalogue compare
-        slope_cor, intercept_cor = compare_flux(sr,
+        slope_cor,slope_err, intercept_cor, int_err, N_match  = compare_flux(sr,
                                        ref_cat["ra"],
                                        ref_cat["decl"],
                                        ref_cat["f_int"],
                                        ref_cat["f_int_err"])
+
+        fields=[slope_cor,slope_err, intercept_cor,int_err, N_match]
+        with open(r'/home/kuiack/fit_results.csv', 'a') as f:
+            writer = csv.writer(f)
+            writer.writerow(fields)
 
         # Slope set to 1e9 if line fit fails
         if slope_cor < 1e8:
@@ -181,10 +188,14 @@ def process(cfg):
             fitsimg.data[0,0,:,:] = (fitsimg.data[0,0,:,:]-intercept_cor)/slope_cor
             fitsimg.writeto(cfg.outdir+filename,overwrite=True)
             os.remove(cfg.indir+cfg.fitsfile)
+#	    print "writing", cfg.outdir+filename
+#	    fitsimg.writeto(cfg.outdir+filename,overwrite=True)
         else:
+#	    print "slope fail", slope_cor, "<", "1e8"
             os.remove(cfg.indir+cfg.fitsfile)
             return
     else:
+#	print "image QC fail", np.nanstd(fitsimg.data[0,0,:,:]), "<", cfg.threshold
         os.remove(cfg.indir+cfg.fitsfile)
         return
 

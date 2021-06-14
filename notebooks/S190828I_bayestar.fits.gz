@@ -1,0 +1,110 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+
+
+
+    
+    <link rel="icon" href="data:,">
+    
+    <link rel="stylesheet" href="/static/css/style.css" />
+    
+    <title>GraceDB | 404 &ndash; Not Found</title>
+<!-- START TESTING -->
+<script type="text/javascript">
+function changeTime(obj, label) {
+    //var timetype = obj.get("value");
+    var timetype = obj.value;
+    if (timetype=="") { return; }
+    var times = document.getElementsByName("time-"+label);
+    for (i=0; i<times.length; i++) {
+        newtime =  times[i].getAttribute(timetype);
+        times[i].innerHTML = newtime;
+    }
+}
+</script>
+
+<!-- END TESTING -->
+
+
+<!-- override other CSS templates as necessary -->
+<link rel="stylesheet" href="/static/css/override.css" />
+
+</head>
+
+<body id="">
+
+<div id="content">
+
+<center>
+<h1>
+GraceDB &mdash; Gravitational-Wave Candidate Event Database
+
+</h1>
+</center>
+
+
+    <div style="padding-bottom: 30px;">
+<ul id="nav">
+    <li id="nav-home"><a href="/">Home</a></li>
+    <li id="nav-public"><a href="/superevents/public/O3/">Public Alerts</a></li>
+    <li id="nav-search"><a href="/search/">Search</a></li>
+    <li id="nav-latest"><a href="/latest/">Latest</a></li>
+    
+    <li id="nav-docs"><a href="/documentation/">Documentation</a></li>
+    
+        
+    
+    
+    
+        <li id="nav-login"><a href="/login/?next=/apiweb/superevents/S190828I/files/bayestar.fits.gz">Login</a></li>
+    
+</ul>
+
+
+</div>
+
+
+
+    <h2>Not Found</h2>
+
+        
+    <p>The item you requested was not found.</p>
+    <p>This may be because the item is restricted to be viewed only by authorized persons. If you have authorization, please log in and try again.</p>
+
+
+    </div>
+
+<div id="header">
+<!-- Header. Yea, this is actually a footer.  It *was* as header once, though. -->
+ <table align="center" width="90%">
+  <tr>
+   <td align="center">
+    <img width="52" height="36" src="/static/images/ligo-blue.gif" />
+    <!-- 673px 487px -->
+   </td>
+
+   <td align="center">
+    <img width="164" height="30" src="/static/images/Virgo_logo50.png" />
+    <!-- 4,829px 884px -->
+   </td>
+
+   <td align="center">
+    
+        
+    
+    <!-- 287px 101px -->
+   </td>
+
+   <td align="center">
+    <img width="87" height="37" src="/static/images/LSC_logo50.png" />
+    <!-- 6,261px 2,652px -->
+   </td>
+  </tr>
+ </table>
+<!-- End Header -->
+</div>
+
+</body>
+</html>

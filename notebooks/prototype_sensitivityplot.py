@@ -1,4 +1,9 @@
 
+
+# This code takes a list of AARTFAAR fits images and calculates the RMS  concentric rings in each image.
+# sources are removed with sigma clipping. 
+
+
 # coding: utf-8
 
 # In[1]:
@@ -190,12 +195,14 @@ ateam = {"ra":np.array([82.88,299.43,350.28,187.07]),"decl":np.array([21.98,40.5
 # In[12]:
 
 
-with open(sys.argv[1]) as f:
-    observations = f.read().splitlines()
+#with open(sys.argv[1]) as f:
+#    observations = f.read().splitlines()
 
-image_list = np.array([])
-for obs in observations:
-        image_list = np.append(image_list,sorted(glob.glob(obs+"/*S2*fits"))[::1000])
+#image_list = np.array([])
+#for obs in observations:
+#        image_list = np.append(image_list,sorted(glob.glob(obs+"/*S2*fits"))[::100])
+
+image_list = sorted(glob.glob("/data/ASf_201811291400/*S2*fits"))[:100]
 
 print "number of images to process", len(image_list)
 #  
@@ -315,14 +322,14 @@ def process_image(image):
                                "area":area, "area_fraction":area_fraction, "LST":LST*np.ones(len(area))})
 
     
-    if os.path.isfile("/home/kuiack/AARTFAACsurvey_sensitivity_plot.csv"): 
-        previous_result = pd.read_csv("/home/kuiack/AARTFAACsurvey_sensitivity_plot.csv")
+    if os.path.isfile("/home/kuiack/AARTFAACsurvey_sensitivity_plot_ringmethod.csv"): 
+        previous_result = pd.read_csv("/home/kuiack/AARTFAACsurvey_sensitivity_plot_ringmethod.csv")
 
         total_result = pd.concat([img_result,previous_result])
-        total_result.to_csv("/home/kuiack/AARTFAACsurvey_sensitivity_plot.csv", index=False)
+        total_result.to_csv("/home/kuiack/AARTFAACsurvey_sensitivity_plot_ringmethod.csv", index=False)
 #        print time.time() - t1
     else:
-        img_result.to_csv("/home/kuiack/AARTFAACsurvey_sensitivity_plot.csv", index=False)
+        img_result.to_csv("/home/kuiack/AARTFAACsurvey_sensitivity_plot_ringmethod.csv", index=False)
     return
 
 
