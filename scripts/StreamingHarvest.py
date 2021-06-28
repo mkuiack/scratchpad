@@ -275,9 +275,13 @@ def run_query(transients_query, dbname, dataset_id, engine, host, port, user, pw
     transients = tkp.db.generic.get_db_rows_as_dicts(cursor)
     return transients
 
-# import database username/password/etc.
-sys.path.append('/home/kuiack')
-from database_info import *
+
+engine = 'postgresql'
+host = 'localhost'
+port = 5432
+user = 'mkuiack'
+password = 'Morecomplicatedpass1234'
+
 query_loglevel = logging.WARNING  # Set to INFO to see queries, otherwise WARNING
 
 tot_timer= time.time()
@@ -436,19 +440,60 @@ for t1, t2 in zip(time_intervals[:-1],time_intervals[1:]):
 
 
     for _id in np.unique(transients.runcatid):
-	    band_timediff = (np.min(transients[(transients.runcatid == _id) & \
-        	                 (transients.band == 23) & \
-                	         (transients.extract_type == 0)].round_times) - np.min(transients[(transients.runcatid == _id) & \
-                      	(transients.band == 24) & \
-          	            (transients.extract_type == 0)].round_times)).total_seconds()
+	    _subTR = transients[(transients.runcatid == _id )]
+	    _subTR_extc = _subTR[(transients.extract_type == 0 )]
 
-	    if band_timediff >= 0 and band_timediff <= 600 \
-	        and (np.max(transients[(transients.runcatid == _id )].det_sigma) > 8 ):
+	    if (np.max(_subTR.det_sigma) > 8 ) and  \
+	    (len(_subTR_extc[(transients.freq_eff >= 6e7 )]) > 0 ) and \
+	    (len(_subTR_extc[(transients.freq_eff <= 6e7 )]) > 0 ):
+
+#     (len(np.unique(_subTR_extc.taustart_ts)) > 1 ) :
+	        if len(_subTR_extc) < 100:
+	            diff_M = np.array(np.abs(_subTR_extc.taustart_ts.values-_subTR_extc.taustart_ts.values[:,None]))
+	            diff_M[(diff_M == np.timedelta64(0,'ns'))] *= np.nan
+            
+	            if (np.min(diff_M) != np.timedelta64(1000000000,'ns')):
+	                continue
+
+	        if len(reduced) == 0:
+	            reduced = pd.DataFrame(_subTR)
+	        else:
+	            reduced = pd.concat([reduced, _subTR])
+	    
+#	    if (np.max(_subTR.det_sigma) > 8 ) and  \
+#	    (len(_subTR_extc[(transients.freq_eff >= 6e7 )]) > 0 ) and \
+#	    (len(_subTR_extc[(transients.freq_eff <= 6e7 )]) > 0 ) and \
+#	    (len(_subTR_extc) > 1 ) :
+#	        if len(reduced) == 0:
+#	            reduced = pd.DataFrame(_subTR)
+#	        else:
+#	            reduced = pd.concat([reduced, _subTR])
+
+
+
+#	    band_timediff = (np.min(transients[(transients.runcatid == _id) & \
+#        	                 (transients.band == 23) & \
+#                	         (transients.extract_type == 0)].round_times) - np.min(transients[(transients.runcatid == _id) & \
+#                      	(transients.band == 24) & \
+#          	            (transients.extract_type == 0)].round_times)).total_seconds()
+
+#   	    if (np.max(transients[(transients.runcatid == _id )].det_sigma) > 8 ) and  \
+#   		 (len(transients[(transients.runcatid == _id ) & \
+#                		 (transients.extract_type == 0 ) & \
+#                   		 (transients.freq_eff >= 6e7 )]) > 0 ) and \
+#   		 (len(transients[(transients.runcatid == _id ) & \
+#                   		 (transients.extract_type == 0 ) & \
+#                		 (transients.freq_eff <= 6e7 )]) > 0 ) and \
+#    		(len(np.unique(transients[(transients.runcatid == _id ) & \
+#                    		  (transients.extract_type == 0 )])) > 1 ) :
+#	    if band_timediff >= 0 and band_timediff <= 600 \
+#	        and (np.max(transients[(transients.runcatid == _id )].det_sigma) > 8 ):
 	
-        	    if len(reduced) == 0:
-		                reduced = pd.DataFrame(transients[(transients.runcatid == _id)])
-        	    else:
-        	        reduced = pd.concat([reduced, transients[(transients.runcatid == _id)]])
+#        	    if len(reduced) == 0:
+#		                reduced = pd.DataFrame(transients[(transients.runcatid == _id)])
+#        	    else:
+#        	        reduced = pd.concat([reduced, transients[(transients.runcatid == _id)]])
+
     print "Sigma filter:", time.time() - time_1
     if len(reduced) == 0:
 	print "no valid transients in time interval"
@@ -484,9 +529,9 @@ for t1, t2 in zip(time_intervals[:-1],time_intervals[1:]):
             else:
                 AART_catsource = pd.concat([AART_catsource, pd.DataFrame(base.loc[i]).T])
 
-
-        elif np.logical_or(((c1.separation(c2).deg) > 5),
-                           (np.abs(base.loc[i].timestep - base.drop(index=i).timestep) > 500)).all():
+	# include sources either far in space and close in time, or close in time and far in space
+        elif np.logical_or(((c1.separation(c2).deg) > 2.5),
+                           (np.abs(base.loc[i].timestep - base.drop(index=i).timestep) > 600)).all():
             if len(filtered) == 0:
                 filtered = pd.DataFrame(base.loc[i]).T
             else:
@@ -500,13 +545,21 @@ for t1, t2 in zip(time_intervals[:-1],time_intervals[1:]):
 # Make inspection plot
     
     dbname = AS_db
-    ObsDir = "/data/"+dbname+"_Candidates/"
+    ObsDir = "/data/rerun_2/"+dbname+"_Candidates/"
 
 
 
     for _ID in filtered.index: #AART_catsource.index:
 
         source_df = retrieve_source(transients, _ID)
+
+	while np.abs(source_df.taustart_ts.iloc[-1] - \
+	             source_df.taustart_ts.iloc[len(source_df)/2]) > np.timedelta64(24,'h') \
+	or np.abs(source_df.taustart_ts.iloc[-1] - source_df.taustart_ts.iloc[-2]) > np.timedelta64(1,'h'):
+		source_df = source_df.drop( index=source_df.index[-1])
+
+	while np.abs(source_df.taustart_ts.iloc[0] - source_df.taustart_ts.iloc[1]) > np.timedelta64(1,'h'):
+		source_df = source_df.drop( index=source_df.index[0])
 
         _source_flux = source_df.f_int[(source_df.freq_eff < 60000000) ].values
         _index = source_df.extract_type[(source_df.freq_eff < 60000000) ].values
@@ -608,9 +661,10 @@ for t1, t2 in zip(time_intervals[:-1],time_intervals[1:]):
         try:
             if  os.path.isfile(source_df[ source_df.f_int == source_df.f_int.max()].url[0]):
                 filename = source_df[ source_df.f_int == source_df.f_int.max()].url[0]
+#		print "1 max", filename
             else: 
                 filename = "/mnt/ais001/"+source_df[ source_df.f_int == source_df.f_int.max()].url[0].split("/")[2]+"/"+source_df[ source_df.f_int == source_df.f_int.max()].url[0].split("/")[3]
-
+#		print "2 max", filename
 
             wcs = WCS(filename)
             im_pix_x, im_pix_y, n, nn = wcs.wcs_world2pix(source_df.ra.mean(),source_df.decl.mean(),1,1,1)
@@ -625,9 +679,17 @@ for t1, t2 in zip(time_intervals[:-1],time_intervals[1:]):
             plt.xticks([])
             plt.yticks([])
 
+        except TypeError:
+            print "Max image files not on disk"
+
+	try: 
             plt.subplot(3,3,5)
             if  os.path.isfile(source_df[ source_df.f_int == source_df.f_int.min()].url[0]):
                 filename = source_df[ source_df.f_int == source_df.f_int.min()].url[0]
+                print "1 min", filename
+            else:
+                filename = "/mnt/ais001/"+source_df[ source_df.f_int == source_df.f_int.min()].url[0].split("/")[2]+"/"+source_df[ source_df.f_int == source_df.f_int.min()].url[0].split("/")[3]
+                print "2 min", filename
 
             wcs = WCS(filename)
             im_pix_x, im_pix_y, n, nn = wcs.wcs_world2pix(source_df.ra.mean(),source_df.decl.mean(),1,1,1)
@@ -643,7 +705,7 @@ for t1, t2 in zip(time_intervals[:-1],time_intervals[1:]):
             
             
         except TypeError:
-            print "Image files not on disk"
+            print "Min image files not on disk"
 
 
         ax = plt.subplot(3,3,6)
@@ -680,7 +742,7 @@ for t1, t2 in zip(time_intervals[:-1],time_intervals[1:]):
 print "Total time:", time.time() - tot_timer
 
 myCsvRow = [AS_db,tot_time,tot_candidate, tot_filtered, starttime, endtime ]
-with open('/home/kuiack/AS_survey_stats.csv','a') as fd:
+with open('/home/kuiack/ASrerun2_survey_stats.csv','a') as fd:
 	writer = csv.writer(fd)
         writer.writerow(myCsvRow)
 
